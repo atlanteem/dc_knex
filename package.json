@@ -1,0 +1,26 @@
+{
+  "name": "dc_knex",
+  "version": "0.0.1",
+  "description": "This is a lib of the data collection operations based on knex SQL builder.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/atlanteem/dc_knex.git"
+  },
+  "keywords": [
+    "knex"
+  ],
+  "author": "Chris Wei",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/atlanteem/dc_knex/issues"
+  },
+  "homepage": "https://github.com/atlanteem/dc_knex#readme",
+  "dependencies": {
+    "lodash": "^4.17.11"
+  }
+}
