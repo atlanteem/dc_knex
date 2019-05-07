@@ -6,8 +6,6 @@ var fnLog = null;
 var libKnex = null;
 
 function helperSQLCriteria(knex, condition) {
-    // if (!!fnLog) fnLog('helperSQLCriteria: ', condition);
-
     if (!condition) return knex;
 
     const criteria = { ...condition };
@@ -107,14 +105,14 @@ class DataCollection {
     clone(id, fields) {
         const fieldlist = fields.join(',');
         const sql = `INSERT INTO ${this._tableName} (${fieldlist}) SELECT ${fieldlist} WHERE id=${id} FROM ${this._tableName};`;
-        const knex = DBPGService.libKnex.raw(sql);
+        const knex = libKnex.raw(sql);
         if (this._logEnabled && !!fnLog) fnLog(`db::${this._tableName}.renamePath: `, sql);
         return knex;
     }
 
     renamePath(source, target) {
         const sql = `update ${this._tableName} set tree_path=replace(tree_path::text, '${source}', '${target}')::ltree where tree_path <@ '${source}' returning *;`;
-        const knex = DBPGService.libKnex.raw(sql);
+        const knex = libKnex.raw(sql);
         if (this._logEnabled && !!fnLog) fnLog(`db::${this._tableName}.renamePath: `, sql);
         return knex;
     }
