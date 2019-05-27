@@ -35,12 +35,24 @@ function helperSQLCriteria(knex, condition) {
         }
         delete criteria['colsets'];
     }
-    if (criteria['colconditions']) {
+    if (!!criteria['colconditions']) {
         for (let cc of criteria['colconditions']) {
             // !!! cc['val'] may be null !!! in some cases !!!
             if (!!cc['col'] && !!cc['condition']) knex = knex.where(cc['col'], cc['condition'], cc['val']);
         }
         delete criteria['colconditions'];
+    }
+    if (!!criteria['null']) {
+        for (let n of criteria['null']) {
+            knex = knex.whereNull(n);
+        }
+        delete criteria['null'];
+    }
+    if (!!criteria['notNull']) {
+        for (let nn of criteria['notNull']) {
+            knex = knex.whereNotNull(nn);
+        }
+        delete criteria['notNull'];
     }
     if (!!criteria['obj']) {
         knex = knex.where(criteria['obj']);
@@ -102,11 +114,37 @@ class DataCollection {
         return knex;
     }
 
-    clone(id, fields) {
-        const fieldlist = fields.join(',');
-        const sql = `INSERT INTO ${this._tableName} (${fieldlist}) SELECT ${fieldlist} WHERE id=${id} FROM ${this._tableName};`;
+    clone(ids, fields, alias, flag) {
+        if (_.isEmpty(ids) || _.isEmpty(fields)) { return null; }
+        if (!!alias && !flag) { return null; }
+
+        const targetlist = [ ...fields, ...alias||[] ].map(f => `"${f}"`).join(' , ');
+        const fieldlist = fields.map(f => `"${f}"`).join(' , ');
+        const aliaslist = !alias ? null : alias.map(a => {
+            if (a === 'tree_path') return `text2ltree(concat("${a}"::text, '_${flag}')) as ${a}`;
+            else return `concat("${a}"::text, '_${flag}') as ${a}`;
+        }).join(' , ');
+        const sourcelist= !aliaslist ? fieldlist : `${fieldlist} , ${aliaslist}`;
+        const idlist = ids.map(id => `'${id}'`).join(' , ');
+        
+        const sql = `INSERT INTO ${this._tableName} (${targetlist}) SELECT ${sourcelist} FROM ${this._tableName} WHERE "id" in (${idlist});`;
         const knex = libKnex.raw(sql);
         if (this._logEnabled && !!fnLog) fnLog(`db::${this._tableName}.renamePath: `, sql);
+        return knex;
+    }
+
+    search(keyword, fields) {
+        if (_.isEmpty(keyword) || _.isEmpty(fields)) { return null; }
+
+        const fieldlist = fields.join(',');
+        const criteria = fields
+                        // .map(field => `(to_tsvector('simple', ${field}::text) @@ to_tsquery('simple','%${keyword}%'))`)
+                        .map(field => `(${field}::text like '%${keyword}%')`)
+                        .join(' OR ')
+        const sql = `SELECT ${fieldlist} FROM ${this._viewName} WHERE ${criteria}`;
+
+        const knex = libKnex.raw(sql);
+        if (this._logEnabled && !!fnLog) fnLog(`db::${this._tableName}.search: `, sql);
         return knex;
     }
 

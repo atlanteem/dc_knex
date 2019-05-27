@@ -1,6 +1,6 @@
 {
   "name": "dc_knex",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "This is a lib of the data collection operations based on knex SQL builder.",
   "main": "index.js",
   "scripts": {
