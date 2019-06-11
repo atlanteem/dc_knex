@@ -114,7 +114,7 @@ class DataCollection {
         return knex;
     }
 
-    clone(ids, fields, alias, flag) {
+    clone(ids, fields, alias, flag, createdBy) {
         if (_.isEmpty(ids) || _.isEmpty(fields)) { return null; }
         if (!!alias && !flag) { return null; }
 
@@ -127,7 +127,11 @@ class DataCollection {
         const sourcelist= !aliaslist ? fieldlist : `${fieldlist} , ${aliaslist}`;
         const idlist = ids.map(id => `'${id}'`).join(' , ');
         
-        const sql = `INSERT INTO ${this._tableName} (${targetlist}) SELECT ${sourcelist} FROM ${this._tableName} WHERE "id" in (${idlist});`;
+        const sql = !createdBy ? 
+            `INSERT INTO ${this._tableName} (${targetlist}) SELECT ${sourcelist} FROM ${this._tableName} WHERE "id" in (${idlist});`
+            :
+            `INSERT INTO ${this._tableName} (${targetlist}, "created_by") SELECT ${sourcelist}, '${createdBy}' as created_by FROM ${this._tableName} WHERE "id" in (${idlist});`
+            ;
         const knex = libKnex.raw(sql);
         if (this._logEnabled && !!fnLog) fnLog(`db::${this._tableName}.renamePath: `, sql);
         return knex;
